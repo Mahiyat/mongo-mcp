@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /agent
+
+COPY requirement.txt .
+
+RUN pip install --no-cache-dir -r requirement.txt
+
+COPY run_agent.py .
+
+COPY mongodb_mcp_server.py .
+
+# You can switch to Ollama by adding the ollama client if needed
+
+CMD ["python", "run_agent.py"]

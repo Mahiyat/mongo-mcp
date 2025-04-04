@@ -1,0 +1,11 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY mongodb_mcp_server.py .
+
+RUN pip install pymongo fastmcp
+
+EXPOSE 8080
+
+CMD ["python3", "mongodb_mcp_server.py"]
