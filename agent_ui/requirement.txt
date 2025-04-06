@@ -1,0 +1,4 @@
+praisonaiagents[llm] 
+pymongo 
+fastmcp
+gradio

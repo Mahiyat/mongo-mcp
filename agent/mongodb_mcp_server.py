@@ -13,7 +13,7 @@ logging.basicConfig(
 
 mcp = FastMCP("mongo_toolkit")
 
-logging.info(f"All environment variables: {dict(os.environ)}")
+# logging.info(f"All environment variables: {dict(os.environ)}")
 # Read Mongo URI from environment
 # mongo_uri = os.getenv("MONGO_URI")
 # mongo_db = os.getenv("MONGO_DB")
@@ -21,7 +21,7 @@ logging.info(f"All environment variables: {dict(os.environ)}")
 #     raise Exception("Invalid Mongo URI or MONGO DB!")
 mongo_uri = 'mongodb://admin:password@mongo:27017'
 
-logging.info(mongo_uri)
+# logging.info(mongo_uri)
 try:
     client = MongoClient(mongo_uri)
 except Exception as e:
@@ -34,7 +34,7 @@ logging.info(f"Database: {db}")
 logging.info(f"Collection: {collection}")
 
 @mcp.tool()
-async def find_documents(filter_json: dict = '{}', limit: Optional[int] = 5) -> str:
+async def find_documents(filter_json: dict = '{}', limit: Optional[int] = None) -> str:
     try:
         # Handle both string and dict input for filter_json
         if isinstance(filter_json, dict):
@@ -57,7 +57,10 @@ async def find_documents(filter_json: dict = '{}', limit: Optional[int] = 5) -> 
 @mcp.tool()
 async def insert_document(document_json: dict) -> str:
     try:
-        document = json.loads(document_json)
+        if isinstance(document_json, dict):
+            document = document_json
+        else:
+            document_json = json.loads(document_json)
         print(document)
         result = collection.insert_one(document)
         return f"Inserted document with _id: {str(result.inserted_id)}"
@@ -65,10 +68,13 @@ async def insert_document(document_json: dict) -> str:
         return f"Error: {str(e)}"
 
 @mcp.tool()
-async def delete_documents(filter_json: str) -> str:
+async def delete_document(filter_json: dict) -> str:
     try:
-        query_filter = json.loads(filter_json)
-        result = collection.delete_many(query_filter)
+        if isinstance(filter_json, dict):
+            query_filter = filter_json
+        else:
+            query_filter = json.loads(filter_json)
+        result = collection.delete_one(query_filter)
         return f"Deleted {result.deleted_count} document(s)"
     except Exception as e:
         return f"Error: {str(e)}"
