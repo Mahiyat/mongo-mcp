@@ -55,7 +55,7 @@ async def find_documents(filter_json: dict = '{}', limit: Optional[int] = None) 
         return f"Error: {str(e)}"
 
 @mcp.tool()
-async def insert_document(document_json: dict) -> str:
+async def insert_document(document_json: Union[dict, str]) -> str:
     try:
         if isinstance(document_json, dict):
             document = document_json
@@ -66,14 +66,26 @@ async def insert_document(document_json: dict) -> str:
         return f"Inserted document with _id: {str(result.inserted_id)}"
     except Exception as e:
         return f"Error: {str(e)}"
+    
+@mcp.tool()
+async def update_document(query_json: dict, new_values_json: dict):
+    try:
+        query_filter = query_json
+        new_values = {"$set": new_values_json}
+        result = collection.update_one(query_filter, new_values)
+        return f"Updated {result.modified_count} document(s)"
+    except Exception as e:
+        return f"Error: {str(e)}"    
 
 @mcp.tool()
-async def delete_document(filter_json: dict) -> str:
+async def delete_document(filter_json: Union[dict, str]) -> str:
     try:
         if isinstance(filter_json, dict):
             query_filter = filter_json
         else:
-            query_filter = json.loads(filter_json)
+            query_filter = json.loads(filter_json) if filter_json else {}
+        if not query_filter:  # Prevent accidental deletion of all documents
+            return "Error: Empty filter provided; no documents deleted."
         result = collection.delete_one(query_filter)
         return f"Deleted {result.deleted_count} document(s)"
     except Exception as e:
