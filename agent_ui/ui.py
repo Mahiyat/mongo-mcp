@@ -2,11 +2,48 @@ from praisonaiagents import Agent, MCP
 import gradio as gr
 import litellm
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set to INFO or DEBUG as needed
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 # litellm.api_base="http://ollama-llm:11434"
-litellm.api_base=os.environ.get("OLLAMA_HOST")
+litellm._turn_on_debug()
 
-def search_mongo(query):
+def search_mongo(query, model_choice):
+    # Determine the LLM based on the model choice
+    env_dict=None
+    if model_choice == "Gemini 2.5":
+        # api_key = os.environ.get("GOOGLE_API_KEY")
+        # env_dict = {
+        #     "GOOGLE_API_KEY": api_key
+        # }
+        # logging.info(f"Gemini API Key: {api_key}")
+        # Assuming you have a Gemini API key set in the environment
+        llm = "gemini/gemini-2.5-flash-preview-05-20"  # Replace with actual Gemini model name (e.g., gemini-pro)
+        # Ensure the API key is set in the environment or configure litellm accordingly
+        # litellm.api_base = "https://generativelanguage.googleapis.com"
+        litellm.api_key = os.environ.get("GOOGLE_API_KEY")
+        # litellm.model_alias_map = {
+        #     "gemini/gemini-2.0-flash": {
+        #         "model": "gemini/gemini-2.0-flash",
+        #         "api_key": api_key,
+        #         "api_base": "https://generativelanguage.googleapis.com",
+        #         "stream": False
+        #     }
+        # }
+    elif model_choice == "Llama3.2":
+        litellm.api_base=os.environ.get("OLLAMA_HOST")
+        # litellm.api_key = ""
+        llm = "ollama/llama3.2"
+    else:
+        raise ValueError("Invalid model choice")
+    
+    # logging.info(env_dict)
+    
     agent = Agent(
         instructions="""
     You are a MongoDB assistant for a Course Information System. Your role is to interact with MongoDB using the available tools to perform the following actions based on user input:
@@ -51,19 +88,24 @@ def search_mongo(query):
     Important rule:
     1. Keep the response informative, clear, and formatted for readability.
 """,
-        llm="ollama/llama3.2",
+        llm=llm,
         tools=MCP("python mongodb_mcp_server.py", debug=True)
     )
 
     result = agent.start(query)
+    logging.info(f"The search result type\n{type(result)}")
     return f"## Search Results\n\n{result}"
 
 demo = gr.Interface(
     fn=search_mongo,
-    inputs=gr.Textbox(placeholder="List out all courses..."),
+    inputs=[
+        gr.Textbox(placeholder="List out all courses..."),
+        gr.Dropdown(choices=["Llama3.2", "Gemini 2.5"], label="Select Model", value="Gemini 2.5")
+    ],
     outputs=gr.Markdown(value="## Welcome to JU-CSE BSc Course Information System\n\nHello! I'm here to assist you with course information. Please enter a query like 'List out all courses', 'Insert a course', or 'Delete a course with code CSE 100' to get started."),
     title="JU-CSE BSc Course Information System",
-    description="Enter your query below:"
+    description="Enter your query below:",
+    flagging_mode="never"
 )
 
 if __name__ == "__main__":
