@@ -1,4 +1,5 @@
-praisonaiagents[llm] 
+praisonaiagents 
 pymongo 
 fastmcp
 gradio
+litellm
