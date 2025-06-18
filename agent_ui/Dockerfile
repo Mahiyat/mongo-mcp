@@ -4,7 +4,7 @@ WORKDIR /agent
 
 COPY agent_ui/requirement.txt .
 
-RUN pip install --no-cache-dir -r requirement.txt
+RUN pip install --no-cache-dir -r requirement.txt -U
 
 COPY agent_ui/ui.py .
 
