@@ -3,3 +3,4 @@ pymongo
 fastmcp
 gradio
 litellm
+ollama
