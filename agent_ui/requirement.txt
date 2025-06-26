@@ -3,4 +3,4 @@ pymongo
 fastmcp
 gradio
 litellm
-ollama
+httpx>=0.28.1
